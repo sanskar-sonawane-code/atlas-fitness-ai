@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATLAS — AI Fitness Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020c12;--panel:rgba(0,200,255,.04);--border:rgba(0,200,255,.16);--border2:rgba(0,200,255,.07);
+  --c:#00c8ff;--c2:#00eeff;--cdim:rgba(0,200,255,.5);
+  --red:#ff3b5c;--green:#00ffb3;--gold:#ffd166;--orange:#ff9f43;
+  --txt:#cceeff;--txtd:rgba(200,238,255,.42);
+  --glow:0 0 22px rgba(0,200,255,.45);--glow2:0 0 50px rgba(0,200,255,.18);
+  --glowg:0 0 12px rgba(0,255,179,.5);--glowr:0 0 12px rgba(255,59,92,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Rajdhani',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* BG layers */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg::before{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,200,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.022) 1px,transparent 1px);
+  background-size:42px 42px}
+.bg::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.022) 2px,rgba(0,0,0,.022) 4px)}
+.bg-glow{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:900px;
+  background:radial-gradient(ellipse,rgba(0,80,160,.07) 0%,transparent 68%);z-index:0;pointer-events:none;
+  animation:gbreathe 5s ease-in-out infinite}
+@keyframes gbreathe{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+
+/* HUD corners */
+.hc{position:fixed;z-index:2;pointer-events:none}
+.hc::before,.hc::after{content:'';position:absolute;background:var(--c);box-shadow:var(--glow)}
+.hc::before{width:26px;height:2px}.hc::after{width:2px;height:26px}
+.hc.tl{top:13px;left:13px}.hc.tl::before,.hc.tl::after{top:0;left:0}
+.hc.tr{top:13px;right:13px}.hc.tr::before{top:0;right:0;left:auto}.hc.tr::after{top:0;right:0;left:auto}
+.hc.bl{bottom:13px;left:13px}.hc.bl::before{bottom:0;top:auto;left:0}.hc.bl::after{bottom:0;top:auto;left:0}
+.hc.br{bottom:13px;right:13px}.hc.br::before{bottom:0;top:auto;right:0;left:auto}.hc.br::after{bottom:0;top:auto;right:0;left:auto}
+
+/* HEADER */
+header{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:11px 26px;border-bottom:1px solid var(--border);background:rgba(2,12,18,.97);backdrop-filter:blur(20px);flex-shrink:0}
+
+.logo{display:flex;align-items:center;gap:13px}
+.core{position:relative;width:42px;height:42px;flex-shrink:0}
+.cr{position:absolute;border-radius:50%;border:1px solid var(--c)}
+.cr.r1{inset:0;animation:spin 9s linear infinite;border-color:rgba(0,200,255,.45)}
+.cr.r2{inset:7px;animation:spin 5s linear infinite reverse;border-style:dashed;border-color:rgba(0,200,255,.28)}
+.cc{position:absolute;inset:15px;border-radius:50%;background:var(--c2);
+  box-shadow:0 0 14px var(--c2),0 0 28px rgba(0,200,255,.4);animation:cpulse 1.9s ease-in-out infinite alternate}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes cpulse{from{opacity:.7;transform:scale(.85)}to{opacity:1;transform:scale(1.15)}}
+
+.ltitle{font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:var(--c2);text-shadow:0 0 22px rgba(0,238,255,.55);letter-spacing:5px}
+.lsub{font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--cdim);letter-spacing:2px}
+
+/* Voice waveform */
+.vwave{display:flex;align-items:center;gap:3px;height:22px;opacity:0;transition:opacity .3s}
+.vwave.on{opacity:1}
+.wb{width:3px;background:var(--c2);border-radius:2px;box-shadow:0 0 4px var(--c2);animation:wdance .85s ease-in-out infinite alternate}
+.wb:nth-child(1){height:5px;animation-delay:0s}.wb:nth-child(2){height:13px;animation-delay:.1s}
+.wb:nth-child(3){height:20px;animation-delay:.2s}.wb:nth-child(4){height:11px;animation-delay:.15s}
+.wb:nth-child(5){height:17px;animation-delay:.05s}.wb:nth-child(6){height:7px;animation-delay:.25s}
+.wb:nth-child(7){height:15px;animation-delay:.12s}
+@keyframes wdance{from{transform:scaleY(.35);opacity:.55}to{transform:scaleY(1);opacity:1}}
+
+.hdr-right{display:flex;align-items:center;gap:18px}
+.hstat{text-align:right}
+.hstat-l{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cdim);letter-spacing:2px}
+.hstat-v{font-family:'Orbitron',monospace;font-size:12px;font-weight:600;color:var(--c2)}
+.live{display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--green)}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:var(--glowg);animation:blink 2.5s infinite}
+@keyframes blink{0%,87%,100%{opacity:1}94%{opacity:.12}}
+
+/* MAIN */
+.main{position:relative;z-index:5;display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:258px;flex-shrink:0;border-right:1px solid var(--border);background:rgba(2,12,18,.86);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:3px}.sidebar::-webkit-scrollbar-thumb{background:rgba(0,200,255,.18)}
+
+.prof-panel{padding:14px;border-bottom:1px solid var(--border)}
+.sec-hdr{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--cdim);margin-bottom:10px}
+.prow{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.pi{background:rgba(0,200,255,.045);border:1px solid var(--border2);color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 8px;outline:none;width:100%;transition:border-color .2s}
+.pi:focus{border-color:var(--c)}
+.pi::placeholder{color:var(--txtd)}
+.ps{background:rgba(0,200,255,.045);border:1px solid var(--border2);color:var(--txt);
+  font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 8px;outline:none;width:100%;cursor:pointer;margin-bottom:6px}
+.ps option{background:#020c12}
+.pbtn{background:rgba(0,200,255,.07);border:1px solid var(--c);color:var(--c);
+  font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;padding:7px;
+  cursor:pointer;transition:all .2s;width:100%;margin-top:2px}
+.pbtn:hover{background:var(--c);color:var(--bg);box-shadow:var(--glow)}
+
+/* Metrics tiles */
+.met-panel{padding:12px 14px;border-bottom:1px solid var(--border);display:none}
+.met-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.met-tile{background:rgba(0,200,255,.035);border:1px solid var(--border2);padding:8px;text-align:center}
+.met-val{font-family:'Orbitron',monospace;font-size:15px;font-weight:600;color:var(--c2)}
+.met-val.g{color:var(--green)}.met-val.y{color:var(--gold)}.met-val.r{color:var(--red)}
+.met-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--txtd);letter-spacing:1px;margin-top:2px}
+
+.slbl{padding:9px 14px 3px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cdim);letter-spacing:3px}
+.qb{display:flex;align-items:center;gap:9px;padding:9px 14px;background:none;border:none;
+  border-left:2px solid transparent;color:var(--txtd);font-family:'Rajdhani',sans-serif;
+  font-size:13px;font-weight:500;cursor:pointer;text-align:left;width:100%;transition:all .18s}
+.qb:hover{background:rgba(0,200,255,.055);border-left-color:var(--c);color:var(--txt)}
+.qi{width:18px;text-align:center;font-size:14px}
+.sdiv{height:1px;background:var(--border2);margin:5px 14px}
+
+/* CHAT AREA */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Intent banner */
+.ibar{height:0;overflow:hidden;transition:height .3s;background:rgba(0,200,255,.045);
+  border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 22px;gap:8px}
+.ibar.on{height:34px}
+.ilbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cdim);letter-spacing:2px}
+.ichip{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--c2);
+  border:1px solid rgba(0,200,255,.28);padding:2px 8px;background:rgba(0,200,255,.06)}
+
+/* Messages */
+.msgs{flex:1;overflow-y:auto;padding:18px 26px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.msgs::-webkit-scrollbar{width:4px}.msgs::-webkit-scrollbar-thumb{background:rgba(0,200,255,.22);border-radius:2px}
+
+.msg{display:flex;gap:11px;animation:min 0.32s cubic-bezier(.34,1.56,.64,1)}
+@keyframes min{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse;align-self:flex-end;max-width:72%}
+.msg.ai{max-width:90%}
+
+.av{width:33px;height:33px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;border:1px solid var(--border)}
+.msg.ai .av{background:rgba(0,200,255,.07);border-color:var(--c);box-shadow:0 0 10px rgba(0,200,255,.22)}
+.msg.user .av{background:rgba(255,59,92,.09);border-color:rgba(255,59,92,.32)}
+
+.bbl{padding:12px 15px;line-height:1.65;font-size:14px;font-weight:400}
+.msg.ai .bbl{background:rgba(0,200,255,.04);border:1px solid var(--border);border-left:2px solid var(--c);color:var(--txt)}
+.msg.user .bbl{background:rgba(255,59,92,.06);border:1px solid rgba(255,59,92,.17);border-right:2px solid var(--red);color:var(--txt);text-align:right}
+
+.mlbl{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:5px}
+.msg.ai .mlbl{color:var(--c)}.msg.user .mlbl{color:var(--red);text-align:right}
+
+/* Speak button */
+.spkbtn{display:inline-flex;align-items:center;gap:4px;margin-top:7px;background:none;
+  border:1px solid var(--border2);color:var(--cdim);font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:1px;padding:3px 9px;cursor:pointer;transition:all .2s}
+.spkbtn:hover{border-color:var(--c);color:var(--c)}
+.spkbtn.on{color:var(--green);border-color:var(--green);animation:spulse 1s infinite}
+@keyframes spulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* Typing */
+.trow{display:flex;gap:11px;align-items:center;animation:min .3s ease}
+.tbbl{background:rgba(0,200,255,.035);border:1px solid var(--border);border-left:2px solid var(--c);
+  padding:11px 15px;display:flex;align-items:center;gap:9px}
+.ttxt{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cdim);letter-spacing:1px}
+.tdots{display:flex;gap:3px}
+.tdots span{width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 5px var(--c);animation:tdot 1.4s infinite}
+.tdots span:nth-child(2){animation-delay:.2s}.tdots span:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{opacity:.18;transform:scale(.65)}40%{opacity:1;transform:scale(1.3)}}
+
+/* INPUT */
+.inp-area{border-top:1px solid var(--border);background:rgba(2,12,18,.97);padding:13px 22px 15px;flex-shrink:0}
+.inp-wrap{display:flex;align-items:center;gap:9px;border:1px solid var(--border);
+  background:rgba(0,200,255,.03);padding:9px 13px;transition:border-color .2s,box-shadow .2s}
+.inp-wrap:focus-within{border-color:var(--c);box-shadow:var(--glow2)}
+.iprompt{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--c);flex-shrink:0}
+#ci{flex:1;background:none;border:none;outline:none;color:var(--txt);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500}
+#ci::placeholder{color:var(--txtd);font-style:italic}
+
+.mic{width:31px;height:31px;border-radius:50%;background:none;border:1px solid var(--border);
+  color:var(--txtd);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.mic:hover{border-color:var(--c);color:var(--c)}
+.mic.on{border-color:var(--red);color:var(--red);box-shadow:var(--glowr);animation:mpulse 1s infinite}
+@keyframes mpulse{0%,100%{box-shadow:var(--glowr)}50%{box-shadow:0 0 28px rgba(255,59,92,.65)}}
+
+.sbtn{background:none;border:1px solid var(--c);color:var(--c);padding:6px 15px;
+  font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.sbtn:hover{background:var(--c);color:var(--bg);box-shadow:var(--glow)}
+.sbtn:disabled{opacity:.3;cursor:not-allowed}
+
+.bot-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cdim);
+  border:1px solid var(--border2);padding:3px 9px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
+.chip:hover{border-color:var(--c);color:var(--c);background:rgba(0,200,255,.045)}
+
+.vtog-row{display:flex;align-items:center;gap:7px}
+.vtog-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txtd);letter-spacing:1px;cursor:pointer}
+.vtog{width:34px;height:17px;background:rgba(0,200,255,.09);border:1px solid var(--border);
+  border-radius:9px;cursor:pointer;position:relative;transition:all .2s}
+.vtog.on{background:rgba(0,200,255,.22);border-color:var(--c)}
+.vtog::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;
+  background:var(--txtd);border-radius:50%;transition:all .2s}
+.vtog.on::after{left:19px;background:var(--c);box-shadow:0 0 6px var(--c)}
+
+/* Content formatting */
+.bbl b{color:var(--c2);font-weight:600}
+.bbl em{color:var(--gold);font-style:normal}
+
+@media(max-width:800px){.sidebar{display:none}.hdr-right .hstat{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-glow"></div>
+<div class="hc tl"></div><div class="hc tr"></div>
+<div class="hc bl"></div><div class="hc br"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="core">
+      <div class="cr r1"></div><div class="cr r2"></div><div class="cc"></div>
+    </div>
+    <div>
+      <div class="ltitle">ATLAS</div>
+      <div class="lsub">ADAPTIVE TRAINING &amp; LIFESTYLE AI SYSTEM v3.0 · GROQ POWERED</div>
+    </div>
+  </div>
+
+  <div class="vwave" id="vwave">
+    <div class="wb"></div><div class="wb"></div><div class="wb"></div>
+    <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+  </div>
+
+  <div class="hdr-right">
+    <div class="hstat"><div class="hstat-l">SESSION</div><div class="hstat-v" id="hSess">—</div></div>
+    <div class="hstat"><div class="hstat-l">MODULE</div><div class="hstat-v" id="hMod">STANDBY</div></div>
+    <div class="hstat"><div class="hstat-l">MODEL</div><div class="hstat-v" style="color:var(--gold)">LLAMA-3.3</div></div>
+    <div class="live"><div class="ldot"></div>ONLINE</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="prof-panel">
+      <div class="sec-hdr">// OPERATOR PROFILE</div>
+      <div class="prow">
+        <input class="pi" id="pAge" type="number" placeholder="Age" min="10" max="99">
+        <select class="pi" id="pGen" style="cursor:pointer">
+          <option value="">Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <div class="prow">
+        <input class="pi" id="pWt" type="number" placeholder="Weight (kg)">
+        <input class="pi" id="pHt" type="number" placeholder="Height (cm)">
+      </div>
+      <select class="ps" id="pAct">
+        <option value="">Activity Level</option>
+        <option value="sedentary">Sedentary (desk job)</option>
+        <option value="light">Light (1-3x/week)</option>
+        <option value="moderate">Moderate (3-5x/week)</option>
+        <option value="active">Active (6-7x/week)</option>
+        <option value="very_active">Athlete (2x/day)</option>
+      </select>
+      <select class="ps" id="pGoal">
+        <option value="">Primary Goal</option>
+        <option value="muscle_gain">Muscle Gain / Bulk</option>
+        <option value="fat_loss">Fat Loss / Cut</option>
+        <option value="recomposition">Recomposition</option>
+        <option value="strength">Raw Strength</option>
+        <option value="endurance">Endurance / Cardio</option>
+      </select>
+      <select class="ps" id="pLvl">
+        <option value="">Fitness Level</option>
+        <option value="beginner">Beginner (&lt;1 yr)</option>
+        <option value="intermediate">Intermediate (1-3 yr)</option>
+        <option value="advanced">Advanced (3+ yr)</option>
+      </select>
+      <button class="pbtn" onclick="saveProfile()">⬡ INITIALIZE PROFILE</button>
+    </div>
+
+    <!-- Live metrics -->
+    <div class="met-panel" id="metPanel">
+      <div class="sec-hdr">// BIOMETRICS</div>
+      <div class="met-grid" id="metGrid"></div>
+    </div>
+
+    <div class="slbl">// QUICK MODULES</div>
+    <button class="qb" onclick="qp('Design a complete weekly workout plan tailored to my profile')"><span class="qi">💪</span>Workout Plan</button>
+    <button class="qb" onclick="qp('Create a personalized 7-day meal plan with full macros for my goal')"><span class="qi">🥗</span>Diet Plan</button>
+    <button class="qb" onclick="qp('Calculate all my health metrics: BMI, TDEE, BMR, ideal weight, macros')"><span class="qi">📊</span>Full Metrics</button>
+    <button class="qb" onclick="qp('Design a 30-day progressive transformation challenge for my level')"><span class="qi">🔥</span>30-Day Challenge</button>
+    <button class="qb" onclick="qp('Give me an evidence-based supplement protocol for my goal')"><span class="qi">💊</span>Supplement Stack</button>
+    <button class="qb" onclick="qp('Build me a complete sleep and recovery optimization protocol')"><span class="qi">😴</span>Recovery Protocol</button>
+    <button class="qb" onclick="qp('Design a 4-day per week progressive overload strength program')"><span class="qi">🏋️</span>Strength Program</button>
+    <button class="qb" onclick="qp('Create a fat-burning HIIT cardio protocol with progression')"><span class="qi">🏃</span>HIIT Cardio</button>
+    <button class="qb" onclick="qp('Full home workout plan with zero equipment for my level')"><span class="qi">🏠</span>Home Training</button>
+    <button class="qb" onclick="qp('I have hit a plateau. Analyze my situation and tell me how to break through it')"><span class="qi">⚡</span>Plateau Breaker</button>
+    <button class="qb" onclick="qp('What is the optimal pre-workout and post-workout nutrition strategy?')"><span class="qi">⏱</span>Nutrient Timing</button>
+    <button class="qb" onclick="qp('Create a posture correction and mobility routine I can do daily')"><span class="qi">🧘</span>Posture & Mobility</button>
+    <div class="sdiv"></div>
+    <button class="qb" onclick="resetSession()" style="color:var(--red);opacity:.65"><span class="qi">↺</span>Reset Session</button>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area">
+    <div class="ibar" id="ibar">
+      <span class="ilbl">DETECTED MODULE:</span>
+      <span class="ichip" id="ichip">—</span>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="inp-area">
+      <div class="inp-wrap">
+        <span class="iprompt">ATLAS &gt;</span>
+        <input type="text" id="ci" placeholder="Speak a directive or type your query, Operator...">
+        <button class="mic" id="micBtn" onclick="toggleMic()" title="Voice Input">🎙</button>
+        <button class="sbtn" id="sendBtn" onclick="send()">SEND</button>
+      </div>
+      <div class="bot-row">
+        <div class="chips">
+          <span class="chip" onclick="qp('Bulking plan 3500 calories')">Bulk Plan</span>
+          <span class="chip" onclick="qp('Fix my posture with daily exercises')">Posture Fix</span>
+          <span class="chip" onclick="qp('Best exercises for abs and core')">Core Blast</span>
+          <span class="chip" onclick="qp('Explain progressive overload simply')">Overload 101</span>
+          <span class="chip" onclick="qp('How do I track body fat accurately?')">Track Fat%</span>
+        </div>
+        <div class="vtog-row">
+          <span class="vtog-lbl">AUTO-SPEAK</span>
+          <div class="vtog on" id="vtog" onclick="toggleVoice()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+//  When running locally:  BACKEND = "http://localhost:8000"
+//  After Render deploy:   BACKEND = "https://your-app.onrender.com"
+//  Leave empty "" to use the same origin (when frontend
+//  is served by the FastAPI backend itself — recommended)
+// ═══════════════════════════════════════════════════════
+const BACKEND = "";   // ← empty = same origin (works on Render automatically)
+
+// ── State ───────────────────────────────────────────────
+let sessId   = "ATLAS-" + Math.random().toString(36).substring(2,8).toUpperCase();
+let voiceOn  = true;
+let listening= false;
+let speaking = false;
+let profile  = {};
+let msgN     = 0;
+let recog    = null;
+
+document.getElementById("hSess").textContent = sessId;
+
+// ── Speech Synthesis (TTS — JARVIS speaks) ──────────────
+const synth = window.speechSynthesis;
+
+function bestVoice() {
+  const vs = synth.getVoices();
+  return vs.find(v=>v.name.match(/Daniel|David|Alex|Google UK English Male|Microsoft David/i) && v.lang.startsWith("en"))
+      || vs.find(v=>v.lang.startsWith("en-GB"))
+      || vs.find(v=>v.lang.startsWith("en"))
+      || vs[0];
+}
+
+function speak(txt) {
+  if (!voiceOn || !txt) return;
+  synth.cancel();
+  const clean = txt
+    .replace(/\*\*(.*?)\*\*/g,"$1").replace(/#{1,3} /g,"").replace(/[•\-] /g,"")
+    .replace(/`([^`]+)`/g,"$1").replace(/ATLAS SUMMARY:/gi,"Summary.")
+    .replace(/\n\n+/g,". ").replace(/\n/g,", ")
+    .substring(0, 580);
+  const u = new SpeechSynthesisUtterance(clean);
+  u.voice = bestVoice(); u.rate = 0.87; u.pitch = 0.82; u.volume = 1;
+  u.onstart = ()=>{ document.getElementById("vwave").classList.add("on"); speaking=true; };
+  u.onend = u.onerror = ()=>{ document.getElementById("vwave").classList.remove("on"); speaking=false; };
+  synth.speak(u);
+}
+
+function stopSpeak() { synth.cancel(); document.getElementById("vwave").classList.remove("on"); speaking=false; }
+
+function toggleVoice() {
+  voiceOn = !voiceOn;
+  document.getElementById("vtog").classList.toggle("on", voiceOn);
+  if (!voiceOn) stopSpeak();
+}
+
+// ── Speech Recognition (STT — mic input) ────────────────
+function initRecog() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  recog = new SR();
+  recog.lang = "en-US"; recog.continuous = false; recog.interimResults = true;
+  recog.onresult = e => {
+    const t = Array.from(e.results).map(r=>r[0].transcript).join("");
+    document.getElementById("ci").value = t;
+    if (e.results[0].isFinal) { stopListen(); setTimeout(send, 300); }
+  };
+  recog.onerror = recog.onend = stopListen;
+}
+
+function toggleMic() { listening ? stopListen() : startListen(); }
+
+function startListen() {
+  if (!recog) initRecog();
+  if (!recog) { alert("Voice input not supported in this browser. Try Chrome."); return; }
+  stopSpeak();
+  recog.start(); listening = true;
+  document.getElementById("micBtn").classList.add("on");
+  document.getElementById("micBtn").textContent = "⏹";
+}
+
+function stopListen() {
+  recog?.stop(); listening = false;
+  document.getElementById("micBtn").classList.remove("on");
+  document.getElementById("micBtn").textContent = "🎙";
+}
+
+// ── Profile ─────────────────────────────────────────────
+function saveProfile() {
+  const age  = document.getElementById("pAge").value;
+  const gen  = document.getElementById("pGen").value;
+  const wt   = document.getElementById("pWt").value;
+  const ht   = document.getElementById("pHt").value;
+  const act  = document.getElementById("pAct").value;
+  const goal = document.getElementById("pGoal").value;
+  const lvl  = document.getElementById("pLvl").value;
+
+  if (age)  profile.age           = parseInt(age);
+  if (gen)  profile.gender        = gen;
+  if (wt)   profile.weight_kg     = parseFloat(wt);
+  if (ht)   profile.height_cm     = parseFloat(ht);
+  if (act)  profile.activity_level= act;
+  if (goal) profile.goal          = goal;
+  if (lvl)  profile.level         = lvl;
+
+  if (profile.weight_kg && profile.height_cm && profile.age && profile.gender)
+    showMetrics(calcMet(profile));
+
+  const desc = `Profile initialized. ${age||"?"}yo ${gen||"person"}, ${wt||"?"}kg, ${ht||"?"}cm. Activity: ${act||"moderate"}. Goal: ${goal||"general fitness"}. Level: ${lvl||"intermediate"}.`;
+  qp(desc);
+}
+
+function calcMet(p) {
+  const h=p.height_cm/100, bmi=+(p.weight_kg/(h*h)).toFixed(1);
+  const bmr=Math.round(10*p.weight_kg+6.25*p.height_cm-5*p.age+(p.gender==="male"?5:-161));
+  const mlt={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9};
+  const tdee=Math.round(bmr*(mlt[p.activity_level]||1.55));
+  return {bmi,bmr,tdee,cut:tdee-500,bulk:tdee+300,prot:Math.round(p.weight_kg*2.2)};
+}
+
+function showMetrics(m) {
+  const bmiC = m.bmi<18.5?"y":m.bmi<25?"g":m.bmi<30?"y":"r";
+  document.getElementById("metPanel").style.display="block";
+  document.getElementById("metGrid").innerHTML=[
+    {v:m.bmi,  l:"BMI",        c:bmiC},
+    {v:m.bmr,  l:"BMR kcal",   c:""},
+    {v:m.tdee, l:"TDEE",       c:""},
+    {v:m.prot+"g",l:"PROTEIN/DAY",c:"g"},
+    {v:m.cut,  l:"CUT TARGET", c:""},
+    {v:m.bulk, l:"BULK TARGET",c:"y"},
+  ].map(i=>`<div class="met-tile"><div class="met-val ${i.c}">${i.v}</div><div class="met-lbl">${i.l}</div></div>`).join("");
+}
+
+// ── Intent detection (client-side) ──────────────────────
+const IMAP={
+  "WORKOUT":    /\b(workout|training|exercise|gym|routine|split|push|pull|hypertrophy|strength|powerlifting|calisthenics)\b/i,
+  "NUTRITION":  /\b(diet|meal|food|calorie|macro|protein|carb|fat|bulk|cut|keto|vegan|fasting|nutrition)\b/i,
+  "METRICS":    /\b(bmi|tdee|bmr|body.?fat|calculate|metric|vo2|weight|height|age|maintenance)\b/i,
+  "SUPPLEMENT": /\b(supplement|creatine|protein.powder|pre.workout|bcaa|vitamin|omega|stack)\b/i,
+  "RECOVERY":   /\b(recovery|sleep|rest|deload|fatigue|sore|stretch|mobility)\b/i,
+  "CARDIO":     /\b(cardio|hiit|run|jog|cycling|endurance|fat.burn)\b/i,
+  "MINDSET":    /\b(motivat|plateau|stuck|mental|habit|discipline|consistency)\b/i,
+};
+
+function getIntent(txt) {
+  for(const[k,rx]of Object.entries(IMAP)) if(rx.test(txt)) return k+" MODULE";
+  return "GENERAL QUERY";
+}
+
+function showIntent(lbl) {
+  document.getElementById("ichip").textContent=lbl;
+  document.getElementById("hMod").textContent=lbl.split(" ")[0];
+  const b=document.getElementById("ibar");
+  b.classList.add("on");
+  setTimeout(()=>b.classList.remove("on"),4500);
+}
+
+// ── Chat ────────────────────────────────────────────────
+function qp(t){ document.getElementById("ci").value=t; send(); }
+
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function fmt(t){
+  return esc(t)
+    .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
+    .replace(/^### (.+)$/gm,'<div style="font-family:Orbitron,monospace;font-size:10px;color:var(--c2);letter-spacing:2px;margin:11px 0 5px;border-bottom:1px solid var(--border2);padding-bottom:3px">$1</div>')
+    .replace(/^## (.+)$/gm,'<div style="font-family:Orbitron,monospace;font-size:11px;color:var(--c2);letter-spacing:2px;margin:13px 0 5px">// $1</div>')
+    .replace(/^# (.+)$/gm,'<div style="font-family:Orbitron,monospace;font-size:13px;color:var(--c2);letter-spacing:3px;margin:13px 0 7px;text-shadow:0 0 14px rgba(0,238,255,.5)">⬡ $1</div>')
+    .replace(/^[•\-\*] (.+)$/gm,'<div style="display:flex;gap:7px;padding:2px 0"><div style="width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 5px var(--c);margin-top:8px;flex-shrink:0"></div><div>$1</div></div>')
+    .replace(/^(\d+)\. (.+)$/gm,'<div style="display:flex;gap:7px;padding:2px 0"><div style="font-family:Share Tech Mono,monospace;font-size:10px;color:var(--c);min-width:16px;margin-top:3px">$1.</div><div>$2</div></div>')
+    .replace(/ATLAS SUMMARY:/g,'<div style="font-family:Orbitron,monospace;font-size:10px;color:var(--green);letter-spacing:2px;margin-top:11px;border-top:1px solid var(--border2);padding-top:7px">⬡ ATLAS SUMMARY</div>')
+    .replace(/\n\n/g,"<br><br>").replace(/\n/g,"<br>");
+}
+
+function addMsg(role, html, raw){
+  const box=document.getElementById("msgs");
+  const d=document.createElement("div");
+  d.className=`msg ${role}`;
+  const lbl=role==="ai"?"ATLAS INTELLIGENCE":"OPERATOR";
+  const ico=role==="ai"?"⬡":"◈";
+  const spk=role==="ai"&&raw?`<br><button class="spkbtn" onclick="reSpeak(this,'${encodeURIComponent(raw)}')">▶ SPEAK</button>`:"";
+  d.innerHTML=`<div class="av">${ico}</div><div><div class="mlbl">${lbl}</div><div class="bbl">${html}${spk}</div></div>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight; msgN++;
+}
+
+function reSpeak(btn,enc){
+  if(speaking){ stopSpeak(); document.querySelectorAll(".spkbtn").forEach(b=>{b.textContent="▶ SPEAK";b.classList.remove("on")}); return; }
+  document.querySelectorAll(".spkbtn").forEach(b=>{b.textContent="▶ SPEAK";b.classList.remove("on")});
+  btn.textContent="⏹ STOP"; btn.classList.add("on");
+  speak(decodeURIComponent(enc));
+  const t=setInterval(()=>{ if(!speaking){btn.textContent="▶ SPEAK";btn.classList.remove("on");clearInterval(t);} },500);
+}
+
+function showTyping(){
+  const box=document.getElementById("msgs");
+  const d=document.createElement("div"); d.id="trow"; d.className="trow";
+  d.innerHTML=`<div class="av" style="background:rgba(0,200,255,.07);border-color:var(--c);box-shadow:0 0 10px rgba(0,200,255,.22)">⬡</div>
+  <div class="tbbl"><span class="ttxt">ATLAS PROCESSING</span><div class="tdots"><span></span><span></span><span></span></div></div>`;
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function rmTyping(){ document.getElementById("trow")?.remove(); }
+
+// Extract stats client-side too
+function extractStats(t){
+  let s={};
+  let m;
+  if(m=t.match(/(\d+(?:\.\d+)?)\s*kg/i))     s.weight_kg=parseFloat(m[1]);
+  if(m=t.match(/(\d+(?:\.\d+)?)\s*(?:lbs?)/i)) s.weight_kg=+(parseFloat(m[1])*0.453592).toFixed(1);
+  if(m=t.match(/(\d+(?:\.\d+)?)\s*cm/i))     s.height_cm=parseFloat(m[1]);
+  if(m=t.match(/(\d+)\s*(?:years?\s*old|yr)/i)) s.age=parseInt(m[1]);
+  if(/\b(male|man|guy)\b/i.test(t))    s.gender="male";
+  if(/\b(female|woman|girl)\b/i.test(t)) s.gender="female";
+  if(/\b(bulk|muscle.gain|mass)\b/i.test(t))  s.goal="muscle_gain";
+  else if(/\b(cut|fat.loss)\b/i.test(t)) s.goal="fat_loss";
+  if(/\bbeginner\b/i.test(t))     s.level="beginner";
+  if(/\bintermediate\b/i.test(t)) s.level="intermediate";
+  if(/\badvanced\b/i.test(t))     s.level="advanced";
+  return s;
+}
+
+async function send(){
+  const inp=document.getElementById("ci");
+  const btn=document.getElementById("sendBtn");
+  const txt=inp.value.trim();
+  if(!txt||btn.disabled) return;
+
+  inp.value=""; btn.disabled=true; stopSpeak();
+  addMsg("user", esc(txt));
+  showIntent(getIntent(txt));
+  showTyping();
+
+  // Merge extracted stats
+  Object.assign(profile, extractStats(txt));
+  if(profile.weight_kg&&profile.height_cm&&profile.age&&profile.gender)
+    showMetrics(calcMet(profile));
+
+  try{
+    const base = BACKEND || window.location.origin;
+    const res = await fetch(`${base}/chat`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({session_id:sessId, message:txt, user_profile:profile})
+    });
+
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.detail||`Server error ${res.status}`);
+    }
+
+    const data=await res.json();
+    const ai=data.response||"Systems error. Please retry.";
+
+    if(data.metrics) showMetrics(data.metrics);
+    if(data.updated_profile) Object.assign(profile,data.updated_profile);
+
+    rmTyping();
+    addMsg("ai", fmt(ai), ai);
+    if(voiceOn) speak(ai);
+
+  } catch(err){
+    rmTyping();
+    const msg=`Systems diagnostic: ${err.message}. Ensure backend is running and GROQ_API_KEY is set.`;
+    addMsg("ai",`<em>${esc(msg)}</em>`,msg);
+    if(voiceOn) speak("Systems diagnostic error. Please check the backend connection.");
+    console.error(err);
+  }
+
+  btn.disabled=false; inp.focus();
+}
+
+function resetSession(){
+  if(!confirm("Reset ATLAS session and clear all data?")) return;
+  sessId="ATLAS-"+Math.random().toString(36).substring(2,8).toUpperCase();
+  document.getElementById("hSess").textContent=sessId;
+  document.getElementById("msgs").innerHTML="";
+  document.getElementById("metPanel").style.display="none";
+  profile={}; msgN=0; stopSpeak();
+  setTimeout(welcome, 300);
+}
+
+document.getElementById("ci").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}
+});
+
+function welcome(){
+  const w=`<b>ATLAS v3.0 ONLINE.</b> Neural pathways nominal. Voice synthesis: <span style="color:var(--green)">ACTIVE</span>. Model: <em>LLaMA 3.3 70B via Groq</em>.<br><br>
+Good day, Operator. All systems are fully operational. I am your Adaptive Training & Lifestyle Intelligence — running on Groq's high-performance inference engine at no cost to you.<br><br>
+My modules include <b>personalized workout programming</b>, <b>precision diet & macro planning</b>, <b>real-time biometric calculations</b>, <b>recovery protocols</b>, <b>supplement stacks</b>, and <b>30-day transformation programs</b>.<br><br>
+For maximum personalization, initialize your profile using the panel on the left. I will calibrate every protocol to your exact parameters.<br><br>
+<em>Shall we begin, Operator?</em>`;
+  addMsg("ai", w, "ATLAS version 3 online. All systems nominal. Good day Operator. I am your adaptive training and lifestyle intelligence. Shall we begin?");
+  if(voiceOn) setTimeout(()=>speak("ATLAS version 3.0 online. All systems nominal. Good day Operator. I am your adaptive training and lifestyle intelligence, powered by LLaMA 3.3 via Groq. Shall we begin?"),700);
+}
+
+window.addEventListener("load",()=>{ initRecog(); synth.getVoices(); setTimeout(welcome,500); });
+</script>
+</body>
+</html>
