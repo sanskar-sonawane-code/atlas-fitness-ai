@@ -3,4 +3,3 @@ uvicorn[standard]==0.29.0
 groq==0.9.0
 pydantic==2.7.1
 python-multipart==0.0.9
-starlette==1.0.0
